@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One-Day Trip Builder</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Landing Section -->
+    <section id="landing" class="section active">
+        <div class="container">
+            <header class="hero">
+                <h1>Plan Your Perfect One-Day Trip</h1>
+                <p class="hero-description">
+                    Create customized day trips with our intelligent trip builder. 
+                    Select your preferences, get instant cost estimates, and receive 
+                    a detailed itinerary tailored to your group's needs.
+                </p>
+                <button id="startPlanningBtn" class="cta-button">Start Planning</button>
+            </header>
+            
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">🗓️</div>
+                    <h3>Flexible Duration</h3>
+                    <p>Choose between 8 or 10-hour trip options</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Custom Activities</h3>
+                    <p>Select from various activities to match your interests</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Instant Pricing</h3>
+                    <p>Get real-time cost calculations and breakdowns</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trip Form Section -->
+    <section id="tripForm" class="section">
+        <div class="container">
+            <header class="section-header">
+                <h2>Build Your Trip</h2>
+                <p>Fill in your preferences to create the perfect day trip</p>
+            </header>
+
+            <form id="tripPlannerForm" class="trip-form">
+                <!-- Duration Selection -->
+                <div class="form-group">
+                    <label class="form-label">Trip Duration</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="duration" value="8" checked>
+                            <span class="radio-custom"></span>
+                            8 Hours
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="duration" value="10">
+                            <span class="radio-custom"></span>
+                            10 Hours
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Date Picker -->
+                <div class="form-group">
+                    <label for="tripDate" class="form-label">Trip Date</label>
+                    <input type="date" id="tripDate" name="tripDate" class="form-input" required>
+                </div>
+
+                <!-- Participants -->
+                <div class="form-group">
+                    <label for="participants" class="form-label">Number of Participants</label>
+                    <input type="number" id="participants" name="participants" min="1" max="50" value="1" class="form-input" required>
+                </div>
+
+                <!-- Activities -->
+                <div class="form-group">
+                    <label class="form-label">Activities</label>
+                    <div class="activity-grid">
+                        <label class="activity-card">
+                            <input type="checkbox" name="activities" value="sightseeing">
+                            <div class="activity-content">
+                                <div class="activity-icon">🏛️</div>
+                                <h4>Sightseeing</h4>
+                                <p>Explore local landmarks and attractions</p>
+                                <span class="activity-price">+₹25/person</span>
+                            </div>
+                        </label>
+                        <label class="activity-card">
+                            <input type="checkbox" name="activities" value="adventure">
+                            <div class="activity-content">
+                                <div class="activity-icon">🏔️</div>
+                                <h4>Adventure</h4>
+                                <p>Thrilling outdoor activities</p>
+                                <span class="activity-price">+₹45/person</span>
+                            </div>
+                        </label>
+                        <label class="activity-card">
+                            <input type="checkbox" name="activities" value="teambuilding">
+                            <div class="activity-content">
+                                <div class="activity-icon">🤝</div>
+                                <h4>Team Building</h4>
+                                <p>Group activities and challenges</p>
+                                <span class="activity-price">+₹35/person</span>
+                            </div>
+                        </label>
+                        <label class="activity-card">
+                            <input type="checkbox" name="activities" value="cultural">
+                            <div class="activity-content">
+                                <div class="activity-icon">🎭</div>
+                                <h4>Cultural Experience</h4>
+                                <p>Museums, art galleries, local culture</p>
+                                <span class="activity-price">+₹30/person</span>
+                            </div>
+                        </label>
+                        <label class="activity-card">
+                            <input type="checkbox" name="activities" value="meals">
+                            <div class="activity-content">
+                                <div class="activity-icon">🍽️</div>
+                                <h4>Meals</h4>
+                                <p>Lunch and refreshments included</p>
+                                <span class="activity-price">+₹20/person</span>
+                            </div>
+                        </label>
+                        <label class="activity-card">
+                            <input type="checkbox" name="activities" value="transport">
+                            <div class="activity-content">
+                                <div class="activity-icon">🚌</div>
+                                <h4>Transport</h4>
+                                <p>Round-trip transportation</p>
+                                <span class="activity-price">+₹15/person</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Designation -->
+                <div class="form-group">
+                    <label for="designation" class="form-label">Designation</label>
+                    <select id="designation" name="designation" class="form-input" required>
+                        <option value="">Select your designation</option>
+                        <option value="intern">Intern</option>
+                        <option value="engineer">Engineer</option>
+                        <option value="manager">Manager</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <button type="button" id="calculateCostBtn" class="calculate-button">Calculate Cost</button>
+            </form>
+
+            <!-- Cost Breakdown -->
+            <div id="costBreakdown" class="cost-breakdown hidden">
+                <h3>Cost Breakdown</h3>
+                <div class="cost-details">
+                    <div class="cost-item">
+                        <span>Base Cost:</span>
+                        <span id="baseCost">₹0</span>
+                    </div>
+                    <div class="cost-item">
+                        <span>Activity Costs:</span>
+                        <span id="activityCost">₹0</span>
+                    </div>
+                    <div class="cost-item total">
+                        <span>Total Cost:</span>
+                        <span id="totalCost">₹0</span>
+                    </div>
+                </div>
+                <!-- Added View Trip Summary button after cost breakdown -->
+                <button type="button" id="viewSummaryBtn" class="view-summary-button">View Trip Summary</button>
+            </div>
+
+            <!-- Itinerary Timeline -->
+            <div id="itinerary" class="itinerary hidden">
+                <h3>Your Itinerary</h3>
+                <div id="timelineContainer" class="timeline-container">
+                    <!-- Timeline will be generated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary Section -->
+    <section id="summary" class="section">
+        <div class="container">
+            <header class="section-header">
+                <h2>Trip Summary</h2>
+                <p>Review your trip details and download your proposal</p>
+            </header>
+
+            <div id="summaryContent" class="summary-content">
+                <!-- Summary will be populated by JavaScript -->
+            </div>
+
+            <div class="summary-actions">
+                <button id="downloadPdfBtn" class="download-button">Download Proposal (PDF)</button>
+                <button id="backToFormBtn" class="secondary-button">Edit Trip</button>
+            </div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>
