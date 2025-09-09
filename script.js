@@ -16,7 +16,7 @@ class TripBuilder {
       },
     }
 
-    // Activity pricing
+    // Activity pricing (not needed after backend, but kept for fallback)
     this.activityPrices = {
       sightseeing: 25,
       adventure: 45,
@@ -26,10 +26,10 @@ class TripBuilder {
       transport: 15,
     }
 
-    // Base costs by duration
+    // Base costs by duration (also fallback only)
     this.baseCosts = {
       8: 50,
-      10: 100 ,
+      10: 100,
     }
 
     this.init()
@@ -143,36 +143,48 @@ class TripBuilder {
     return isValid
   }
 
-  calculateCost() {
+  // 🔹 Updated to use backend API
+  async calculateCost() {
     if (!this.validateForm()) {
       return
     }
 
-    // Calculate base cost
-    const baseCost = this.baseCosts[this.tripData.duration] * this.tripData.participants
+    try {
+      // Send trip data to backend API
+      const response = await fetch("/api/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          duration: this.tripData.duration,
+          participants: this.tripData.participants,
+          activities: this.tripData.activities,
+          designation: this.tripData.designation,
+        }),
+      })
 
-    // Calculate activity costs
-    let activityCost = 0
-    this.tripData.activities.forEach((activity) => {
-      activityCost += this.activityPrices[activity] * this.tripData.participants
-    })
+      if (!response.ok) {
+        throw new Error("Failed to calculate cost")
+      }
 
-    //const totalBeforeDiscount = baseCost + activityCost
-    //const discountAmount = totalBeforeDiscount * discount
-    const totalCost = baseCost + activityCost
+      const data = await response.json()
 
-    // Store costs
-    this.tripData.costs = {
-      base: baseCost,
-      activities: activityCost,
-      total: totalCost,
+      // Store costs from backend response
+      this.tripData.costs = {
+        base: data.baseCost,
+        activities: data.activityCost,
+        discount: data.discountAmount || 0,
+        total: data.total,
+      }
+
+      // Display cost breakdown
+      this.displayCostBreakdown()
+
+      // Generate itinerary (still frontend only)
+      this.generateItinerary()
+    } catch (error) {
+      console.error("Error calculating cost:", error)
+      alert("Something went wrong while calculating the cost. Please try again.")
     }
-
-    // Display cost breakdown
-    this.displayCostBreakdown()
-
-    // Generate itinerary
-    this.generateItinerary()
   }
 
   displayCostBreakdown() {
@@ -193,7 +205,6 @@ class TripBuilder {
 
     if (activities.length === 0) return
 
-    // Activity details
     const activityDetails = {
       sightseeing: { name: "Sightseeing Tour", description: "Explore local landmarks and attractions", duration: 2 },
       adventure: { name: "Adventure Activities", description: "Thrilling outdoor experiences", duration: 3 },
@@ -203,11 +214,9 @@ class TripBuilder {
       transport: { name: "Transportation", description: "Round-trip transportation", duration: 1 },
     }
 
-    // Generate timeline
     let currentTime = 9 // Start at 9 AM
     const timeSlots = []
 
-    // Add arrival/setup
     timeSlots.push({
       time: this.formatTime(currentTime),
       activity: "Arrival & Setup",
@@ -215,12 +224,11 @@ class TripBuilder {
     })
     currentTime += 0.5
 
-    // Distribute activities
     const totalActivityDuration = activities.reduce((sum, activity) => {
       return sum + (activityDetails[activity]?.duration || 1)
     }, 0)
 
-    const availableTime = duration - 1 // Minus arrival time
+    const availableTime = duration - 1
     const timePerActivity = availableTime / activities.length
 
     activities.forEach((activity) => {
@@ -235,24 +243,22 @@ class TripBuilder {
       }
     })
 
-    // Add departure
     timeSlots.push({
       time: this.formatTime(9 + duration),
       activity: "Departure",
       description: "Trip conclusion and departure",
     })
 
-    // Render timeline
     timeSlots.forEach((slot) => {
       const timelineItem = document.createElement("div")
       timelineItem.className = "timeline-item"
       timelineItem.innerHTML = `
-                <div class="timeline-time">${slot.time}</div>
-                <div class="timeline-activity">
-                    <h4>${slot.activity}</h4>
-                    <p>${slot.description}</p>
-                </div>
-            `
+        <div class="timeline-time">${slot.time}</div>
+        <div class="timeline-activity">
+            <h4>${slot.activity}</h4>
+            <p>${slot.description}</p>
+        </div>
+      `
       timelineContainer.appendChild(timelineItem)
     })
 
@@ -270,7 +276,6 @@ class TripBuilder {
   generateSummary() {
     const summaryContent = document.getElementById("summaryContent")
 
-    // Format date
     const date = new Date(this.tripData.date)
     const formattedDate = date.toLocaleDateString("en-US", {
       weekday: "long",
@@ -279,7 +284,6 @@ class TripBuilder {
       day: "numeric",
     })
 
-    // Activity names
     const activityNames = {
       sightseeing: "Sightseeing",
       adventure: "Adventure",
@@ -290,41 +294,40 @@ class TripBuilder {
     }
 
     summaryContent.innerHTML = `
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <h4>Duration</h4>
-                    <div class="value">${this.tripData.duration} Hours</div>
-                </div>
-                <div class="summary-item">
-                    <h4>Date</h4>
-                    <div class="value">${formattedDate}</div>
-                </div>
-                <div class="summary-item">
-                    <h4>Participants</h4>
-                    <div class="value">${this.tripData.participants}</div>
-                </div>
-                <div class="summary-item">
-                    <h4>Total Cost</h4>
-                    <div class="value">₹${Math.round(this.tripData.costs.total)}</div>
-                </div>
-            </div>
-            
-            <div class="summary-activities">
-                <h4>Selected Activities</h4>
-                <div class="activity-tags">
-                    ${this.tripData.activities
-                      .map((activity) => `<span class="activity-tag">${activityNames[activity]}</span>`)
-                      .join("")}
-                </div>
-            </div>
-        `
+      <div class="summary-grid">
+          <div class="summary-item">
+              <h4>Duration</h4>
+              <div class="value">${this.tripData.duration} Hours</div>
+          </div>
+          <div class="summary-item">
+              <h4>Date</h4>
+              <div class="value">${formattedDate}</div>
+          </div>
+          <div class="summary-item">
+              <h4>Participants</h4>
+              <div class="value">${this.tripData.participants}</div>
+          </div>
+          <div class="summary-item">
+              <h4>Total Cost</h4>
+              <div class="value">₹${Math.round(this.tripData.costs.total)}</div>
+          </div>
+      </div>
+      
+      <div class="summary-activities">
+          <h4>Selected Activities</h4>
+          <div class="activity-tags">
+              ${this.tripData.activities
+                .map((activity) => `<span class="activity-tag">${activityNames[activity]}</span>`)
+                .join("")}
+          </div>
+      </div>
+    `
   }
 
   viewTripSummary() {
     this.generateSummary()
     this.showSection("summary")
 
-    // Smooth scroll to summary section
     setTimeout(() => {
       const summarySection = document.getElementById("summary")
       summarySection.scrollIntoView({
@@ -335,13 +338,10 @@ class TripBuilder {
   }
 
   downloadPDF() {
-    // Placeholder PDF download function
-    // In a real implementation, you would use a library like jsPDF
     alert(
       "PDF download functionality would be implemented here.\n\nThis would generate a detailed proposal including:\n- Trip itinerary\n- Cost breakdown\n- Activity details\n- Contact information",
     )
 
-    // Simulate download
     const tripSummary = {
       date: this.tripData.date,
       duration: this.tripData.duration,
@@ -353,7 +353,6 @@ class TripBuilder {
 
     console.log("Trip Summary for PDF:", tripSummary)
 
-    // Create a simple text file as demonstration
     const content = `
 TRIP PROPOSAL
 =============
@@ -369,7 +368,7 @@ ${this.tripData.activities.map((activity) => `- ${activity}`).join("\n")}
 Total Cost: $${Math.round(this.tripData.costs.total)}
 
 Generated on: ${new Date().toLocaleString()}
-        `
+    `
 
     const blob = new Blob([content], { type: "text/plain" })
     const url = window.URL.createObjectURL(blob)
@@ -383,12 +382,10 @@ Generated on: ${new Date().toLocaleString()}
   }
 }
 
-// Initialize the application when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
   new TripBuilder()
 })
 
-// Additional utility functions
 function debounce(func, wait) {
   let timeout
   return function executedFunction(...args) {
@@ -401,7 +398,6 @@ function debounce(func, wait) {
   }
 }
 
-// Smooth scrolling for better UX
 function smoothScrollTo(element) {
   element.scrollIntoView({
     behavior: "smooth",
