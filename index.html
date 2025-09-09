@@ -157,21 +157,20 @@
             <!-- Cost Breakdown -->
             <div id="costBreakdown" class="cost-breakdown hidden">
                 <h3>Cost Breakdown</h3>
-                <div class="cost-details">
-                    <div class="cost-item">
-                        <span>Base Cost:</span>
-                        <span id="baseCost">₹0</span>
-                    </div>
-                    <div class="cost-item">
-                        <span>Activity Costs:</span>
-                        <span id="activityCost">₹0</span>
-                    </div>
-                    <div class="cost-item total">
-                        <span>Total Cost:</span>
-                        <span id="totalCost">₹0</span>
-                    </div>
+                <div id="breakdownDetails" class="breakdown-list"></div>
+                <div class="cost-item">
+                    <span>Base Cost:</span>
+                    <span id="baseCost">₹0</span>
                 </div>
-                <button type="button" id="viewSummaryBtn" class="view-summary-button">View Trip Summary</button>
+                <div class="cost-item">
+                    <span>Activity Costs:</span>
+                    <span id="activityCost">₹0</span>
+                </div>
+                <div class="cost-item total">
+                    <span>Total Cost:</span>
+                    <span id="totalCost">₹0</span>
+                </div>
+                <button type="button" id="viewSummaryBtn" class="view-summary-button hidden">View Trip Summary</button>
             </div>
 
             <!-- Itinerary Timeline -->
