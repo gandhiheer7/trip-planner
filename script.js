@@ -11,25 +11,8 @@ class TripBuilder {
       costs: {
         base: 0,
         activities: 0,
-        discount: 0,
         total: 0,
       },
-    }
-
-    // Activity pricing (not needed after backend, but kept for fallback)
-    this.activityPrices = {
-      sightseeing: 25,
-      adventure: 45,
-      teambuilding: 35,
-      cultural: 30,
-      meals: 20,
-      transport: 15,
-    }
-
-    // Base costs by duration (also fallback only)
-    this.baseCosts = {
-      8: 50,
-      10: 100,
     }
 
     this.init()
@@ -100,16 +83,11 @@ class TripBuilder {
   }
 
   showSection(sectionId) {
-    // Hide all sections
     document.querySelectorAll(".section").forEach((section) => {
       section.classList.remove("active")
     })
-
-    // Show target section
     document.getElementById(sectionId).classList.add("active")
     this.currentSection = sectionId
-
-    // Scroll to top
     window.scrollTo(0, 0)
   }
 
@@ -143,14 +121,13 @@ class TripBuilder {
     return isValid
   }
 
-  // 🔹 Updated to use backend API
+  // 🔹 Calls backend API for cost calculation
   async calculateCost() {
     if (!this.validateForm()) {
       return
     }
 
     try {
-      // Send trip data to backend API
       const response = await fetch("/api/calculate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -168,18 +145,13 @@ class TripBuilder {
 
       const data = await response.json()
 
-      // Store costs from backend response
       this.tripData.costs = {
-        base: data.baseCost,
-        activities: data.activityCost,
-        discount: data.discountAmount || 0,
+        base: data.base,
+        activities: data.activities,
         total: data.total,
       }
 
-      // Display cost breakdown
-      this.displayCostBreakdown()
-
-      // Generate itinerary (still frontend only)
+      this.displayCostBreakdown(data.breakdown)
       this.generateItinerary()
     } catch (error) {
       console.error("Error calculating cost:", error)
@@ -187,7 +159,18 @@ class TripBuilder {
     }
   }
 
-  displayCostBreakdown() {
+  displayCostBreakdown(breakdown = []) {
+    const breakdownContainer = document.getElementById("breakdownDetails")
+    if (breakdownContainer) {
+      breakdownContainer.innerHTML = ""
+      breakdown.forEach((item) => {
+        const row = document.createElement("div")
+        row.className = "breakdown-row"
+        row.innerHTML = `<span>${item.label}</span><span>₹${item.value}</span>`
+        breakdownContainer.appendChild(row)
+      })
+    }
+
     document.getElementById("baseCost").textContent = `₹${this.tripData.costs.base}`
     document.getElementById("activityCost").textContent = `₹${this.tripData.costs.activities}`
     document.getElementById("totalCost").textContent = `₹${Math.round(this.tripData.costs.total)}`
@@ -214,7 +197,7 @@ class TripBuilder {
       transport: { name: "Transportation", description: "Round-trip transportation", duration: 1 },
     }
 
-    let currentTime = 9 // Start at 9 AM
+    let currentTime = 9
     const timeSlots = []
 
     timeSlots.push({
@@ -223,10 +206,6 @@ class TripBuilder {
       description: "Meet at designated location and brief overview",
     })
     currentTime += 0.5
-
-    const totalActivityDuration = activities.reduce((sum, activity) => {
-      return sum + (activityDetails[activity]?.duration || 1)
-    }, 0)
 
     const availableTime = duration - 1
     const timePerActivity = availableTime / activities.length
@@ -327,13 +306,8 @@ class TripBuilder {
   viewTripSummary() {
     this.generateSummary()
     this.showSection("summary")
-
     setTimeout(() => {
-      const summarySection = document.getElementById("summary")
-      summarySection.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      })
+      document.getElementById("summary").scrollIntoView({ behavior: "smooth", block: "start" })
     }, 100)
   }
 
@@ -365,7 +339,7 @@ Designation: ${this.tripData.designation}
 Activities:
 ${this.tripData.activities.map((activity) => `- ${activity}`).join("\n")}
 
-Total Cost: $${Math.round(this.tripData.costs.total)}
+Total Cost: ₹${Math.round(this.tripData.costs.total)}
 
 Generated on: ${new Date().toLocaleString()}
     `
@@ -399,8 +373,5 @@ function debounce(func, wait) {
 }
 
 function smoothScrollTo(element) {
-  element.scrollIntoView({
-    behavior: "smooth",
-    block: "start",
-  })
+  element.scrollIntoView({ behavior: "smooth", block: "start" })
 }
