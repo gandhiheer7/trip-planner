@@ -169,6 +169,23 @@ class TripBuilder {
     document.getElementById("activityCost").textContent = `₹${this.tripData.costs.activities}`
     document.getElementById("totalCost").textContent = `₹${Math.round(this.tripData.costs.total)}`
 
+    // 🔹 Add detailed explanation text
+    const breakdownDetails = document.createElement("div")
+    breakdownDetails.className = "breakdown-details"
+    breakdownDetails.innerHTML = `
+      <p><strong>Calculation Details:</strong></p>
+      <p>Base Cost = ${this.tripData.participants} participants × ₹${this.tripData.duration === 8 ? 50 : 100} = ₹${this.tripData.costs.base}</p>
+      <p>Activity Cost = ${this.tripData.activities.length} activities × (per-person rates × ${this.tripData.participants} participants) = ₹${this.tripData.costs.activities}</p>
+      <p><strong>Total = ₹${Math.round(this.tripData.costs.total)}</strong></p>
+    `
+
+    // Remove old breakdown if exists (to prevent duplicates)
+    const oldDetails = document.querySelector(".breakdown-details")
+    if (oldDetails) oldDetails.remove()
+
+    document.getElementById("costBreakdown").appendChild(breakdownDetails)
+
+    // Reveal section
     document.getElementById("costBreakdown").classList.remove("hidden")
     document.getElementById("viewSummaryBtn").classList.remove("hidden")
   }
@@ -363,12 +380,28 @@ class TripBuilder {
 
     // Cost Breakdown
     doc.setFontSize(14)
-    doc.text("Cost Breakdown", 10, y)
+    doc.text("Cost Breakdown:", 10, y)
     y += 8
     doc.setFontSize(12)
-    doc.text(`Base Cost: ₹${this.tripData.costs.base}`, 10, y); y += 7
-    doc.text(`Activity Cost: ₹${this.tripData.costs.activities}`, 10, y); y += 7
-    doc.text(`Total Cost: ₹${this.tripData.costs.total}`, 10, y); y += 12
+    // Show detailed multiplications
+    doc.text(
+      `Base Cost: ${this.tripData.participants} × ₹${this.baseCosts[this.tripData.duration]} = ₹${this.tripData.costs.base}`,
+      10,
+      y
+      ); y += 7
+
+    this.tripData.activities.forEach((activity) => {
+      const price = this.activityPrices[activity]
+      doc.text(
+        `${activityDetails[activity]}: ${this.tripData.participants} × ₹${price} = ₹${price * this.tripData.participants}`,
+        10,
+        y
+      )
+      y += 7
+    })
+
+    doc.text(`Activity Cost Total: ₹${this.tripData.costs.activities}`, 10, y); y += 7
+    doc.text(`Grand Total: ₹${this.tripData.costs.total}`, 10, y); y += 12
 
     // Special Requests
     if (this.tripData.customNotes && this.tripData.customNotes.trim() !== "") {
@@ -395,16 +428,27 @@ class TripBuilder {
       transport: "Transportation",
     }
 
+    // Generate same itinerary as frontend
+    let currentTime = 9
+    doc.text(`- ${this.formatTime(currentTime)} Arrival & Setup`, 10, y); y += 7
+    currentTime += 0.5
+
+    const availableTime = this.tripData.duration - 1
+    const timePerActivity = availableTime / this.tripData.activities.length
+
     this.tripData.activities.forEach((activity) => {
-      doc.text(`- ${activityDetails[activity] || activity}`, 10, y)
+      doc.text(`- ${this.formatTime(currentTime)} ${activityDetails[activity]}`, 10, y)
       y += 7
+      currentTime += timePerActivity
     })
+
+    doc.text(`- ${this.formatTime(9 + this.tripData.duration)} Departure`, 10, y); y += 12
 
     // Footer
     doc.setFontSize(10)
     doc.setTextColor(100)
     doc.text(`Generated on: ${new Date().toLocaleString()}`, 10, 290)
-    doc.text("Company Name | Contact: info@company.com", 105, 290, { align: "center" })
+    doc.text("\nCompany Name | Contact: info@company.com", 105, 290, { align: "center" })
 
     doc.save(`trip-proposal-${this.tripData.date}.pdf`)
   }
