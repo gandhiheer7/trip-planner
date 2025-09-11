@@ -236,6 +236,12 @@ class TripBuilder {
     return `${displayHour}:${m.toString().padStart(2, "0")} ${period}`
   }
 
+  // New method to handle viewing the summary section
+  viewTripSummary() {
+    this.generateSummary()
+    this.showSection("summary")
+  }
+
   generateSummary() {
     const summaryContent = document.getElementById("summaryContent")
     const date = new Date(this.tripData.date)
