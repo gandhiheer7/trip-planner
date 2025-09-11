@@ -8,7 +8,7 @@ class TripBuilder {
       participants: 1,
       activities: [],
       designation: "",
-      customNotes: "", // 🔹 New field
+      customNotes: "",
       costs: {
         base: 0,
         activities: 0,
@@ -25,7 +25,6 @@ class TripBuilder {
   }
 
   bindEvents() {
-    // Navigation
     document.getElementById("startPlanningBtn").addEventListener("click", () => {
       this.showSection("tripForm")
     })
@@ -34,7 +33,6 @@ class TripBuilder {
       this.showSection("tripForm")
     })
 
-    // Form interactions
     document.getElementById("calculateCostBtn").addEventListener("click", () => {
       this.calculateCost()
     })
@@ -47,7 +45,6 @@ class TripBuilder {
       this.downloadPDF()
     })
 
-    // Form change listeners
     document.querySelectorAll('input[name="duration"]').forEach((radio) => {
       radio.addEventListener("change", (e) => {
         this.tripData.duration = Number.parseInt(e.target.value)
@@ -66,12 +63,10 @@ class TripBuilder {
       this.tripData.designation = e.target.value
     })
 
-    // 🔹 Custom notes input listener
     document.getElementById("customNotes").addEventListener("input", (e) => {
       this.tripData.customNotes = e.target.value
     })
 
-    // Activity selection
     document.querySelectorAll('input[name="activities"]').forEach((checkbox) => {
       checkbox.addEventListener("change", () => {
         this.updateSelectedActivities()
@@ -92,7 +87,6 @@ class TripBuilder {
     document.querySelectorAll(".section").forEach((section) => {
       section.classList.remove("active")
     })
-
     document.getElementById(sectionId).classList.add("active")
     this.currentSection = sectionId
     window.scrollTo(0, 0)
@@ -128,11 +122,8 @@ class TripBuilder {
     return isValid
   }
 
-  // 🔹 Use backend API for cost calculation
   async calculateCost() {
-    if (!this.validateForm()) {
-      return
-    }
+    if (!this.validateForm()) return
 
     try {
       const response = await fetch("/api/calculate", {
@@ -149,7 +140,6 @@ class TripBuilder {
       if (!response.ok) throw new Error("Failed to calculate cost")
 
       const data = await response.json()
-
       this.tripData.costs = {
         base: data.baseCost,
         activities: data.activityCost,
@@ -169,23 +159,6 @@ class TripBuilder {
     document.getElementById("activityCost").textContent = `₹${this.tripData.costs.activities}`
     document.getElementById("totalCost").textContent = `₹${Math.round(this.tripData.costs.total)}`
 
-    // 🔹 Add detailed explanation text
-    const breakdownDetails = document.createElement("div")
-    breakdownDetails.className = "breakdown-details"
-    breakdownDetails.innerHTML = `
-      <p><strong>Calculation Details:</strong></p>
-      <p>Base Cost = ${this.tripData.participants} participants × ₹${this.tripData.duration === 8 ? 50 : 100} = ₹${this.tripData.costs.base}</p>
-      <p>Activity Cost = ${this.tripData.activities.length} activities × (per-person rates × ${this.tripData.participants} participants) = ₹${this.tripData.costs.activities}</p>
-      <p><strong>Total = ₹${Math.round(this.tripData.costs.total)}</strong></p>
-    `
-
-    // Remove old breakdown if exists (to prevent duplicates)
-    const oldDetails = document.querySelector(".breakdown-details")
-    if (oldDetails) oldDetails.remove()
-
-    document.getElementById("costBreakdown").appendChild(breakdownDetails)
-
-    // Reveal section
     document.getElementById("costBreakdown").classList.remove("hidden")
     document.getElementById("viewSummaryBtn").classList.remove("hidden")
   }
@@ -200,12 +173,12 @@ class TripBuilder {
     if (activities.length === 0) return
 
     const activityDetails = {
-      sightseeing: "Sightseeing Tour",
-      adventure: "Adventure Activities",
-      teambuilding: "Team Building",
-      cultural: "Cultural Experience",
-      meals: "Meals & Refreshments",
-      transport: "Transportation",
+      sightseeing: { name: "Sightseeing Tour", description: "Explore local landmarks and attractions", duration: 2 },
+      adventure: { name: "Adventure Activities", description: "Thrilling outdoor experiences", duration: 3 },
+      teambuilding: { name: "Team Building", description: "Group activities and challenges", duration: 2 },
+      cultural: { name: "Cultural Experience", description: "Museums and local culture", duration: 2 },
+      meals: { name: "Meals & Refreshments", description: "Lunch and refreshment breaks", duration: 1 },
+      transport: { name: "Transportation", description: "Round-trip transportation", duration: 1 },
     }
 
     let currentTime = 9
@@ -226,8 +199,8 @@ class TripBuilder {
       if (details) {
         timeSlots.push({
           time: this.formatTime(currentTime),
-          activity: details,
-          description: "",
+          activity: details.name,
+          description: details.description,
         })
         currentTime += timePerActivity
       }
@@ -265,7 +238,6 @@ class TripBuilder {
 
   generateSummary() {
     const summaryContent = document.getElementById("summaryContent")
-
     const date = new Date(this.tripData.date)
     const formattedDate = date.toLocaleDateString("en-US", {
       weekday: "long",
@@ -302,7 +274,6 @@ class TripBuilder {
               <div class="value">₹${Math.round(this.tripData.costs.total)}</div>
           </div>
       </div>
-      
       <div class="summary-activities">
           <h4>Selected Activities</h4>
           <div class="activity-tags">
@@ -313,7 +284,6 @@ class TripBuilder {
       </div>
     `
 
-    // 🔹 Add notes if available
     if (this.tripData.customNotes && this.tripData.customNotes.trim() !== "") {
       summaryContent.innerHTML += `
         <div class="summary-item">
@@ -324,131 +294,61 @@ class TripBuilder {
     }
   }
 
-  viewTripSummary() {
-    this.generateSummary()
-    this.showSection("summary")
-
-    setTimeout(() => {
-      const summarySection = document.getElementById("summary")
-      summarySection.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      })
-    }, 100)
-  }
-
-  // 🔹 New styled PDF generator
+  // 🔹 Generate a professional PDF with jsPDF
   async downloadPDF() {
-    if (typeof window.jspdf === "undefined") {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement("script")
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
-        script.onload = resolve
-        script.onerror = reject
-        document.body.appendChild(script)
-      })
-    }
-
     const { jsPDF } = window.jspdf
     const doc = new jsPDF()
 
-    // Header
-    doc.setFillColor(29, 78, 216)
-    doc.rect(0, 0, 210, 30, "F")
-    doc.setTextColor(255, 255, 255)
+    // === Company Header ===
+    const companyName = "Your Company Name"
+    const companyLogo = "https://via.placeholder.com/100" // replace with logo URL or base64
     doc.setFontSize(18)
-    doc.text("Trip Proposal", 105, 18, { align: "center" })
+    doc.text(companyName, 20, 20)
 
-    // Placeholder logo
-    doc.setFillColor(255, 255, 255)
-    doc.rect(10, 5, 20, 20, "S")
+    // Load logo image
+    try {
+      const img = new Image()
+      img.src = companyLogo
+      await new Promise((resolve) => {
+        img.onload = resolve
+      })
+      doc.addImage(img, "PNG", 150, 10, 40, 20)
+    } catch (err) {
+      console.warn("Logo not loaded, skipping...")
+    }
 
-    doc.setTextColor(0, 0, 0)
+    // === Trip Details ===
     doc.setFontSize(12)
-
-    let y = 40
-
-    // Trip Details
-    doc.setFontSize(14)
-    doc.text("Trip Details", 10, y)
-    y += 8
-    doc.setFontSize(12)
-    doc.text(`Date: ${new Date(this.tripData.date).toLocaleDateString()}`, 10, y); y += 7
-    doc.text(`Duration: ${this.tripData.duration} hours`, 10, y); y += 7
-    doc.text(`Participants: ${this.tripData.participants}`, 10, y); y += 7
-    doc.text(`Designation: ${this.tripData.designation}`, 10, y); y += 12
-
-    // Cost Breakdown
-    doc.setFontSize(14)
-    doc.text("Cost Breakdown:", 10, y)
-    y += 8
-    doc.setFontSize(12)
-    // Show detailed multiplications
-    doc.text(
-      `Base Cost: ${this.tripData.participants} × ₹${this.baseCosts[this.tripData.duration]} = ₹${this.tripData.costs.base}`,
-      10,
-      y
-      ); y += 7
-
-    this.tripData.activities.forEach((activity) => {
-      const price = this.activityPrices[activity]
-      doc.text(
-        `${activityDetails[activity]}: ${this.tripData.participants} × ₹${price} = ₹${price * this.tripData.participants}`,
-        10,
-        y
-      )
-      y += 7
-    })
-
-    doc.text(`Activity Cost Total: ₹${this.tripData.costs.activities}`, 10, y); y += 7
-    doc.text(`Grand Total: ₹${this.tripData.costs.total}`, 10, y); y += 12
+    doc.text(`Date: ${new Date(this.tripData.date).toLocaleDateString()}`, 20, 40)
+    doc.text(`Duration: ${this.tripData.duration} hours`, 20, 50)
+    doc.text(`Participants: ${this.tripData.participants}`, 20, 60)
+    doc.text(`Designation: ${this.tripData.designation}`, 20, 70)
 
     // Special Requests
-    if (this.tripData.customNotes && this.tripData.customNotes.trim() !== "") {
-      doc.setFontSize(14)
-      doc.text("Special Requests", 10, y)
-      y += 8
-      doc.setFontSize(12)
-      doc.text(this.tripData.customNotes, 10, y, { maxWidth: 180 })
-      y += 12
-    }
+    const notes = this.tripData.customNotes || "None"
+    doc.text("Special Requests:", 20, 85)
+    doc.text(notes, 20, 95, { maxWidth: 170 })
 
-    // Itinerary
-    doc.setFontSize(14)
-    doc.text("Itinerary", 10, y)
-    y += 8
-    doc.setFontSize(12)
+    // === Cost Breakdown ===
+    doc.text("Cost Breakdown:", 20, 115)
+    doc.text(`Base Cost: ₹${this.tripData.costs.base}`, 30, 125)
+    doc.text(`Activity Costs: ₹${this.tripData.costs.activities}`, 30, 135)
+    doc.text(`Total Cost: ₹${Math.round(this.tripData.costs.total)}`, 30, 145)
 
-    const activityDetails = {
-      sightseeing: "Sightseeing Tour",
-      adventure: "Adventure Activities",
-      teambuilding: "Team Building",
-      cultural: "Cultural Experience",
-      meals: "Meals & Refreshments",
-      transport: "Transportation",
-    }
-
-    // Generate same itinerary as frontend
-    let currentTime = 9
-    doc.text(`- ${this.formatTime(currentTime)} Arrival & Setup`, 10, y); y += 7
-    currentTime += 0.5
-
-    const availableTime = this.tripData.duration - 1
-    const timePerActivity = availableTime / this.tripData.activities.length
-
-    this.tripData.activities.forEach((activity) => {
-      doc.text(`- ${this.formatTime(currentTime)} ${activityDetails[activity]}`, 10, y)
-      y += 7
-      currentTime += timePerActivity
+    // === Itinerary ===
+    doc.text("Itinerary Timeline:", 20, 165)
+    const timelineContainer = document.querySelectorAll(".timeline-item")
+    timelineContainer.forEach((item, index) => {
+      const time = item.querySelector(".timeline-time").textContent.trim()
+      const activity = item.querySelector("h4").textContent.trim()
+      const description = item.querySelector("p").textContent.trim()
+      doc.setFontSize(10)
+      doc.text(`${time} - ${activity}: ${description}`, 25, 175 + index * 10, { maxWidth: 170 })
     })
-
-    doc.text(`- ${this.formatTime(9 + this.tripData.duration)} Departure`, 10, y); y += 12
 
     // Footer
     doc.setFontSize(10)
-    doc.setTextColor(100)
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 10, 290)
-    doc.text("\nCompany Name | Contact: info@company.com", 105, 290, { align: "center" })
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 280)
 
     doc.save(`trip-proposal-${this.tripData.date}.pdf`)
   }
