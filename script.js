@@ -1,7 +1,7 @@
 // Trip Builder Application
 class TripBuilder {
   constructor() {
-    this.currentSection = "landing"
+    this.currentSection = "landing";
     this.tripData = {
       duration: 8,
       date: "",
@@ -14,116 +14,116 @@ class TripBuilder {
         activities: 0,
         total: 0,
       },
-    }
+    };
 
-    this.init()
+    this.init();
   }
 
   init() {
-    this.bindEvents()
-    this.setMinDate()
+    this.bindEvents();
+    this.setMinDate();
   }
 
   bindEvents() {
     document.getElementById("startPlanningBtn").addEventListener("click", () => {
-      this.showSection("tripForm")
-    })
+      this.showSection("tripForm");
+    });
 
     document.getElementById("backToFormBtn").addEventListener("click", () => {
-      this.showSection("tripForm")
-    })
+      this.showSection("tripForm");
+    });
 
     document.getElementById("calculateCostBtn").addEventListener("click", () => {
-      this.calculateCost()
-    })
+      this.calculateCost();
+    });
 
     document.getElementById("viewSummaryBtn").addEventListener("click", () => {
-      this.viewTripSummary()
-    })
+      this.viewTripSummary();
+    });
 
     document.getElementById("downloadPdfBtn").addEventListener("click", () => {
-      this.downloadPDF()
-    })
+      this.downloadPDF();
+    });
 
     document.querySelectorAll('input[name="duration"]').forEach((radio) => {
       radio.addEventListener("change", (e) => {
-        this.tripData.duration = Number.parseInt(e.target.value)
-      })
-    })
+        this.tripData.duration = Number.parseInt(e.target.value);
+      });
+    });
 
     document.getElementById("participants").addEventListener("input", (e) => {
-      this.tripData.participants = Number.parseInt(e.target.value) || 1
-    })
+      this.tripData.participants = Number.parseInt(e.target.value) || 1;
+    });
 
     document.getElementById("tripDate").addEventListener("change", (e) => {
-      this.tripData.date = e.target.value
-    })
+      this.tripData.date = e.target.value;
+    });
 
     document.getElementById("designation").addEventListener("change", (e) => {
-      this.tripData.designation = e.target.value
-    })
+      this.tripData.designation = e.target.value;
+    });
 
     document.getElementById("customNotes").addEventListener("input", (e) => {
-      this.tripData.customNotes = e.target.value
-    })
+      this.tripData.customNotes = e.target.value;
+    });
 
     document.querySelectorAll('input[name="activities"]').forEach((checkbox) => {
       checkbox.addEventListener("change", () => {
-        this.updateSelectedActivities()
-      })
-    })
+        this.updateSelectedActivities();
+      });
+    });
   }
 
   setMinDate() {
-    const today = new Date()
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const minDate = tomorrow.toISOString().split("T")[0]
-    document.getElementById("tripDate").setAttribute("min", minDate)
+    const minDate = tomorrow.toISOString().split("T")[0];
+    document.getElementById("tripDate").setAttribute("min", minDate);
   }
 
   showSection(sectionId) {
     document.querySelectorAll(".section").forEach((section) => {
-      section.classList.remove("active")
-    })
-    document.getElementById(sectionId).classList.add("active")
-    this.currentSection = sectionId
-    window.scrollTo(0, 0)
+      section.classList.remove("active");
+    });
+    document.getElementById(sectionId).classList.add("active");
+    this.currentSection = sectionId;
+    window.scrollTo(0, 0);
   }
 
   updateSelectedActivities() {
-    const selectedActivities = []
+    const selectedActivities = [];
     document.querySelectorAll('input[name="activities"]:checked').forEach((checkbox) => {
-      selectedActivities.push(checkbox.value)
-    })
-    this.tripData.activities = selectedActivities
+      selectedActivities.push(checkbox.value);
+    });
+    this.tripData.activities = selectedActivities;
   }
 
   validateForm() {
-    const requiredFields = ["tripDate", "participants", "designation"]
-    let isValid = true
+    const requiredFields = ["tripDate", "participants", "designation"];
+    let isValid = true;
 
     requiredFields.forEach((fieldId) => {
-      const field = document.getElementById(fieldId)
+      const field = document.getElementById(fieldId);
       if (!field.value) {
-        field.style.borderColor = "#ef4444"
-        isValid = false
+        field.style.borderColor = "#ef4444";
+        isValid = false;
       } else {
-        field.style.borderColor = "#e2e8f0"
+        field.style.borderColor = "#e2e8f0";
       }
-    })
+    });
 
     if (this.tripData.activities.length === 0) {
-      alert("Please select at least one activity.")
-      isValid = false
+      alert("Please select at least one activity.");
+      isValid = false;
     }
 
-    return isValid
+    return isValid;
   }
 
   async calculateCost() {
-    if (!this.validateForm()) return
+    if (!this.validateForm()) return;
 
     try {
       const response = await fetch("/api/calculate", {
@@ -135,122 +135,80 @@ class TripBuilder {
           activities: this.tripData.activities,
           designation: this.tripData.designation,
         }),
-      })
+      });
 
-      if (!response.ok) throw new Error("Failed to calculate cost")
+      if (!response.ok) throw new Error("Failed to calculate cost");
 
-      const data = await response.json()
+      const data = await response.json();
       this.tripData.costs = {
         base: data.baseCost,
         activities: data.activityCost,
         total: data.total,
-      }
+      };
 
-      this.displayCostBreakdown()
-      this.generateItinerary()
+      this.displayCostBreakdown();
+      this.generateItinerary();
     } catch (error) {
-      console.error("Error calculating cost:", error)
-      alert("Something went wrong while calculating the cost. Please try again.")
+      console.error("Error calculating cost:", error);
+      alert("Something went wrong while calculating the cost. Please try again.");
     }
   }
 
   displayCostBreakdown() {
-    document.getElementById("baseCost").textContent = `₹${this.tripData.costs.base}`
-    document.getElementById("activityCost").textContent = `₹${this.tripData.costs.activities}`
-    document.getElementById("totalCost").textContent = `₹${Math.round(this.tripData.costs.total)}`
+    document.getElementById("baseCost").textContent = `₹${this.tripData.costs.base}`;
+    document.getElementById("activityCost").textContent = `₹${this.tripData.costs.activities}`;
+    document.getElementById("totalCost").textContent = `₹${Math.round(this.tripData.costs.total)}`;
 
-    document.getElementById("costBreakdown").classList.remove("hidden")
-    document.getElementById("viewSummaryBtn").classList.remove("hidden")
+    document.getElementById("costBreakdown").classList.remove("hidden");
+    document.getElementById("viewSummaryBtn").classList.remove("hidden");
   }
 
   generateItinerary() {
-    const timelineContainer = document.getElementById("timelineContainer")
-    timelineContainer.innerHTML = ""
+    const timelineContainer = document.getElementById("timelineContainer");
+    timelineContainer.innerHTML = "";
 
-    const duration = this.tripData.duration
-    const activities = this.tripData.activities
+    if (this.tripData.activities.length === 0) return;
 
-    if (activities.length === 0) return
-
-    const activityDetails = {
-      sightseeing: { name: "Sightseeing Tour", description: "Explore local landmarks and attractions", duration: 2 },
-      adventure: { name: "Adventure Activities", description: "Thrilling outdoor experiences", duration: 3 },
-      teambuilding: { name: "Team Building", description: "Group activities and challenges", duration: 2 },
-      cultural: { name: "Cultural Experience", description: "Museums and local culture", duration: 2 },
-      meals: { name: "Meals & Refreshments", description: "Lunch and refreshment breaks", duration: 1 },
-      transport: { name: "Transportation", description: "Round-trip transportation", duration: 1 },
-    }
-
-    let currentTime = 9
-    const timeSlots = []
-
-    timeSlots.push({
-      time: this.formatTime(currentTime),
-      activity: "Arrival & Setup",
-      description: "Meet at designated location and brief overview",
-    })
-    currentTime += 0.5
-
-    const availableTime = duration - 1
-    const timePerActivity = availableTime / activities.length
-
-    activities.forEach((activity) => {
-      const details = activityDetails[activity]
-      if (details) {
-        timeSlots.push({
-          time: this.formatTime(currentTime),
-          activity: details.name,
-          description: details.description,
-        })
-        currentTime += timePerActivity
-      }
-    })
-
-    timeSlots.push({
-      time: this.formatTime(9 + duration),
-      activity: "Departure",
-      description: "Trip conclusion and departure",
-    })
+    const timeSlots = this.createItinerarySlots(); // Use the new helper
 
     timeSlots.forEach((slot) => {
-      const timelineItem = document.createElement("div")
-      timelineItem.className = "timeline-item"
+      const timelineItem = document.createElement("div");
+      timelineItem.className = "timeline-item";
       timelineItem.innerHTML = `
         <div class="timeline-time">${slot.time}</div>
         <div class="timeline-activity">
             <h4>${slot.activity}</h4>
             <p>${slot.description}</p>
         </div>
-      `
-      timelineContainer.appendChild(timelineItem)
-    })
+      `;
+      timelineContainer.appendChild(timelineItem);
+    });
 
-    document.getElementById("itinerary").classList.remove("hidden")
+    document.getElementById("itinerary").classList.remove("hidden");
   }
 
   formatTime(hour) {
-    const h = Math.floor(hour)
-    const m = Math.round((hour - h) * 60)
-    const period = h >= 12 ? "PM" : "AM"
-    const displayHour = h > 12 ? h - 12 : h === 0 ? 12 : h
-    return `${displayHour}:${m.toString().padStart(2, "0")} ${period}`
+    const h = Math.floor(hour);
+    const m = Math.round((hour - h) * 60);
+    const period = h >= 12 ? "PM" : "AM";
+    const displayHour = h > 12 ? h - 12 : h === 0 ? 12 : h;
+    return `${displayHour}:${m.toString().padStart(2, "0")} ${period}`;
   }
 
-  // New method to handle viewing the summary section
   viewTripSummary() {
-    this.generateSummary()
-    this.showSection("summary")
+    this.generateSummary();
+    this.showSection("summary");
   }
 
   generateSummary() {
-    const summaryContent = document.getElementById("summaryContent")
-    const date = new Date(this.tripData.date)
+    const summaryContent = document.getElementById("summaryContent");
+    const date = new Date(this.tripData.date);
     const formattedDate = date.toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
-    })
+    });
 
     const activityNames = {
       sightseeing: "Sightseeing",
@@ -259,7 +217,7 @@ class TripBuilder {
       cultural: "Cultural Experience",
       meals: "Meals",
       transport: "Transport",
-    }
+    };
 
     summaryContent.innerHTML = `
       <div class="summary-grid">
@@ -288,7 +246,7 @@ class TripBuilder {
                 .join("")}
           </div>
       </div>
-    `
+    `;
 
     if (this.tripData.customNotes && this.tripData.customNotes.trim() !== "") {
       summaryContent.innerHTML += `
@@ -296,89 +254,165 @@ class TripBuilder {
             <h4>Special Requests</h4>
             <div class="value">${this.tripData.customNotes}</div>
         </div>
-      `
+      `;
     }
   }
 
   // 🔹 Generate a professional PDF with jsPDF
   async downloadPDF() {
-    const { jsPDF } = window.jspdf
-    const doc = new jsPDF()
-
-    // === Company Header ===
-    const companyName = "Your Company Name"
-    const companyLogo = "https://via.placeholder.com/100" // replace with logo URL or base64
-    doc.setFontSize(18)
-    doc.text(companyName, 20, 20)
-
-    // Load logo image
     try {
-      const img = new Image()
-      img.src = companyLogo
-      await new Promise((resolve) => {
-        img.onload = resolve
-      })
-      doc.addImage(img, "PNG", 150, 10, 40, 20)
-    } catch (err) {
-      console.warn("Logo not loaded, skipping...")
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // === Company Header ===
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
+      doc.setTextColor("#1e293b");
+      doc.text("Trip Proposal", 105, 22, { align: "center" });
+
+      const companyLogoBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARJSURBVHhe7Z1/aBRBGMd/JwgiuBG0UhFRsFAENf5AFBvBRdpeK1hprPQHhXhxEAsptLQxgoVgIYKFomilYGEjCmqN7UWxVzGgVBQtCioe3Nn9P7e7m917s7v5vP/ywcLszv7nO/t2d2eXERERERERERERERERESkpz03z3k6w8/lQfHrEu+Nxuwz33+l3b/q3KqFnh217S0+LDCUeS1w/mG8n3F2K/3/Eew+2G+7/vU1Xh3sP1hvuP9jvtkz/j4VvX3G/F8c/t/z7j/bfvP/V+/w+2v+P+P/z4R/PP6a59w9x/1H/L/T/Xw9+f/n3D/a/vP/V+/xG27/t/17w7z/t/1n/r/S/q4b/f+XfP9r/8/6X9d8k+NeP/z/i/8+Hfzz/muffPf7/if8/G/7x/Guff/f4/yP+P5/w/8v/P+D/z4f/PP+Z599j/M8n/v98w/8v//+A//8m/P/y/w/4/5nw/8v/P+D/z4f/PP+Z599j/M8n/v98w/8v//+A//8m/P/y/w/4/5nw/8v/P+D/z4f/PP+Z599j/M8n/v98w/8v//+A//8m/P/y/w/4/5nw/8v/P+D/z4f/PP+Z599j/M8n/v98w/8v//+A//8m/P/y/w/4/5nw/8v/P+D/z4f/PP+Z599j/M8n/v98w/8v//+A//8m/P/y/w/4/5nw/8v/P+D/z4f/PP+Z599j/M8n/v98w/8v//+A//8m/P/y/w/4/5nw/8v/P+D/z4f/PP+Z5989/v+J/z8b/vH8a55/9/j/I/7/fML/L/+/gP8/H/7x/Guffvb4/zP+/x3+/wr/vzj8/8D/nx3++Pz7j/bfvP/V+/w+2v+P+P/z4R/PP6a59w9x/1H/L/T/Xw9+f/n3D/a/vP/V+/xG27/t/17w7z/t/1n/r/S/q4b/f+XfP9r/8/6X9V8k+NeP/z/i/8+Hfzz/muffPf7/if8/G/7x/Guff/f4/yP+/3zC/y//v4D/Px/+8fxrnn2P8T+f+P/zDf+//P8D/v9N+P/l/x/w/2bC/y//v4D/Px/+8fxrnn2P8T+f+P/zDf+//P8D/v9N+P/l/x/w/2bC/y//v4D/Px/+8fxrnn2P8T+f+P/zDf+//P8D/v9N+P/l/x/w/2bC/y//v4D/Px/+8fxrnn2P8T+f+P/zDf+//P8D/v9N+P/l/x/w/2bC/y//v4D/Px/+8fxrnn2P8T+f+P/zDf+//P8D/v9N+P/l/x/w/2bC/y//v4D/Px/+8fxrnn2P8T+f+P/zDf+//P8D/v9N+P/l/x/w/2bC/y//v4D/Px/+8fxrnn33+P8n/v9swv8v//8A//8u/P/y/w/4/zPh/5f/f4D/Px/+8fxrnn33+P8n/v9swv8v//8A//8u/P/y/w/4/zPh/5f/f4D/P49I/Lg3y7f3uL479L/T9Pz0eH/XzLhS8Lz47S7//vB8d+l54zR+V/58p3h8l/d/n//V+/z1O/3/iP8/P//T4b7z51xpuL1l9f1u+O8b3q2K/z/n/4X/Hx3+8fT/1/w23L+0+v41+N9zPDvX6H/XvV/D/w+H70+775bL8e/V9U+l+m9c5j7/X2G+8+2v5vB/0v+321/t/t/171f+6/XyoiIiIiIiIiIiIiIiLSjf4C6d5ZJ/C01bIAAAAASUVORK5CYII=";
+      doc.addImage(companyLogoBase64, "PNG", 14, 15, 20, 20);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor("#64748b");
+      doc.text("Generated on: " + new Date().toLocaleDateString(), 195, 22, { align: "right" });
+
+      doc.setDrawColor("#e2e8f0");
+      doc.line(15, 30, 195, 30); // Horizontal line
+
+      // === Trip Details ===
+      let yPosition = 40;
+      const writeLine = (label, value) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(label, 20, yPosition);
+        doc.setFont("helvetica", "normal");
+        doc.text(String(value), 60, yPosition);
+        yPosition += 8;
+      };
+
+      writeLine("Date:", new Date(this.tripData.date).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' }));
+      writeLine("Duration:", `${this.tripData.duration} hours`);
+      writeLine("Participants:", `${this.tripData.participants}`);
+      yPosition += 5;
+
+      // === Cost Breakdown ===
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("Cost Breakdown", 20, yPosition);
+      yPosition += 10;
+      doc.setFontSize(11);
+
+      writeLine("Base Cost:", `₹${this.tripData.costs.base.toLocaleString()}`);
+      writeLine("Activity Costs:", `₹${this.tripData.costs.activities.toLocaleString()}`);
+      doc.setFont("helvetica", "bold");
+      writeLine("Total Cost:", `₹${Math.round(this.tripData.costs.total).toLocaleString()}`);
+      yPosition += 10;
+
+      // === Itinerary ===
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("Proposed Itinerary", 20, yPosition);
+      yPosition += 10;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+
+      const itinerarySlots = this.createItinerarySlots();
+      itinerarySlots.forEach(slot => {
+        if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+        }
+        doc.setFont("helvetica", "bold");
+        doc.text(slot.time, 25, yPosition);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${slot.activity}: ${slot.description}`, 55, yPosition, { maxWidth: 140 });
+        yPosition += 10;
+      });
+
+      // === Footer ===
+      doc.setDrawColor("#e2e8f0");
+      doc.line(15, 285, 195, 285);
+      doc.setFontSize(9);
+      doc.setTextColor("#64748b");
+      doc.text("Thank you for choosing us for your trip planning!", 105, 290, { align: "center" });
+      
+      doc.save(`trip-proposal-${this.tripData.date}.pdf`);
+
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      alert("Oops! Something went wrong while creating the PDF. Please try again.");
+    }
+  }
+
+  createItinerarySlots() {
+    const duration = this.tripData.duration;
+    const activities = this.tripData.activities;
+    const timeSlots = [];
+
+    const activityDetails = {
+      sightseeing: { name: "Sightseeing Tour", description: "Explore local landmarks and attractions" },
+      adventure: { name: "Adventure Activities", description: "Thrilling outdoor experiences" },
+      teambuilding: { name: "Team Building", description: "Group activities and challenges" },
+      cultural: { name: "Cultural Experience", description: "Museums and local culture" },
+      meals: { name: "Meals & Refreshments", description: "Lunch and refreshment breaks" },
+      transport: { name: "Transportation", description: "Arrival and departure logistics" },
+    };
+
+    let currentTime = 9;
+    timeSlots.push({
+      time: this.formatTime(currentTime),
+      activity: "Arrival & Welcome",
+      description: "Meet at the designated location for a brief overview.",
+    });
+    currentTime += 0.5;
+
+    if (activities.length > 0) {
+      const availableTime = duration - 1.5;
+      const timePerActivity = availableTime / activities.length;
+
+      activities.forEach((activity) => {
+        const details = activityDetails[activity];
+        if (details) {
+          timeSlots.push({
+            time: this.formatTime(currentTime),
+            activity: details.name,
+            description: details.description,
+          });
+          currentTime += timePerActivity;
+        }
+      });
     }
 
-    // === Trip Details ===
-    doc.setFontSize(12)
-    doc.text(`Date: ${new Date(this.tripData.date).toLocaleDateString()}`, 20, 40)
-    doc.text(`Duration: ${this.tripData.duration} hours`, 20, 50)
-    doc.text(`Participants: ${this.tripData.participants}`, 20, 60)
-    doc.text(`Designation: ${this.tripData.designation}`, 20, 70)
+    timeSlots.push({
+      time: this.formatTime(9 + duration),
+      activity: "Departure",
+      description: "Trip conclusion and departure.",
+    });
 
-    // Special Requests
-    const notes = this.tripData.customNotes || "None"
-    doc.text("Special Requests:", 20, 85)
-    doc.text(notes, 20, 95, { maxWidth: 170 })
-
-    // === Cost Breakdown ===
-    doc.text("Cost Breakdown:", 20, 115)
-    doc.text(`Base Cost: ₹${this.tripData.costs.base}`, 30, 125)
-    doc.text(`Activity Costs: ₹${this.tripData.costs.activities}`, 30, 135)
-    doc.text(`Total Cost: ₹${Math.round(this.tripData.costs.total)}`, 30, 145)
-
-    // === Itinerary ===
-    doc.text("Itinerary Timeline:", 20, 165)
-    const timelineContainer = document.querySelectorAll(".timeline-item")
-    timelineContainer.forEach((item, index) => {
-      const time = item.querySelector(".timeline-time").textContent.trim()
-      const activity = item.querySelector("h4").textContent.trim()
-      const description = item.querySelector("p").textContent.trim()
-      doc.setFontSize(10)
-      doc.text(`${time} - ${activity}: ${description}`, 25, 175 + index * 10, { maxWidth: 170 })
-    })
-
-    // Footer
-    doc.setFontSize(10)
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 280)
-
-    doc.save(`trip-proposal-${this.tripData.date}.pdf`)
+    return timeSlots;
   }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  new TripBuilder()
-})
+  new TripBuilder();
+});
 
 function debounce(func, wait) {
-  let timeout
+  let timeout;
   return function executedFunction(...args) {
     const later = () => {
-      clearTimeout(timeout)
-      func(...args)
-    }
-    clearTimeout(timeout)
-    timeout = setTimeout(later, wait)
-  }
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
 }
 
 function smoothScrollTo(element) {
   element.scrollIntoView({
     behavior: "smooth",
     block: "start",
-  })
+  });
 }
