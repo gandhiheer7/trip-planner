@@ -183,12 +183,12 @@ class TripBuilder {
     if (activities.length === 0) return
 
     const activityDetails = {
-      sightseeing: { name: "Sightseeing Tour", description: "Explore local landmarks and attractions", duration: 2 },
-      adventure: { name: "Adventure Activities", description: "Thrilling outdoor experiences", duration: 3 },
-      teambuilding: { name: "Team Building", description: "Group activities and challenges", duration: 2 },
-      cultural: { name: "Cultural Experience", description: "Museums and local culture", duration: 2 },
-      meals: { name: "Meals & Refreshments", description: "Lunch and refreshment breaks", duration: 1 },
-      transport: { name: "Transportation", description: "Round-trip transportation", duration: 1 },
+      sightseeing: "Sightseeing Tour",
+      adventure: "Adventure Activities",
+      teambuilding: "Team Building",
+      cultural: "Cultural Experience",
+      meals: "Meals & Refreshments",
+      transport: "Transportation",
     }
 
     let currentTime = 9
@@ -209,8 +209,8 @@ class TripBuilder {
       if (details) {
         timeSlots.push({
           time: this.formatTime(currentTime),
-          activity: details.name,
-          description: details.description,
+          activity: details,
+          description: "",
         })
         currentTime += timePerActivity
       }
@@ -320,36 +320,93 @@ class TripBuilder {
     }, 100)
   }
 
-  downloadPDF() {
-    const content = `
-TRIP PROPOSAL
-=============
+  // 🔹 New styled PDF generator
+  async downloadPDF() {
+    if (typeof window.jspdf === "undefined") {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script")
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+        script.onload = resolve
+        script.onerror = reject
+        document.body.appendChild(script)
+      })
+    }
 
-Date: ${new Date(this.tripData.date).toLocaleDateString()}
-Duration: ${this.tripData.duration} hours
-Participants: ${this.tripData.participants}
-Designation: ${this.tripData.designation}
+    const { jsPDF } = window.jspdf
+    const doc = new jsPDF()
 
-Activities:
-${this.tripData.activities.map((activity) => `- ${activity}`).join("\n")}
+    // Header
+    doc.setFillColor(29, 78, 216)
+    doc.rect(0, 0, 210, 30, "F")
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(18)
+    doc.text("Trip Proposal", 105, 18, { align: "center" })
 
-Special Requests:
-${this.tripData.customNotes || "None"}
+    // Placeholder logo
+    doc.setFillColor(255, 255, 255)
+    doc.rect(10, 5, 20, 20, "S")
 
-Total Cost: ₹${Math.round(this.tripData.costs.total)}
+    doc.setTextColor(0, 0, 0)
+    doc.setFontSize(12)
 
-Generated on: ${new Date().toLocaleString()}
-    `
+    let y = 40
 
-    const blob = new Blob([content], { type: "text/plain" })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `trip-proposal-${this.tripData.date}.txt`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    window.URL.revokeObjectURL(url)
+    // Trip Details
+    doc.setFontSize(14)
+    doc.text("Trip Details", 10, y)
+    y += 8
+    doc.setFontSize(12)
+    doc.text(`Date: ${new Date(this.tripData.date).toLocaleDateString()}`, 10, y); y += 7
+    doc.text(`Duration: ${this.tripData.duration} hours`, 10, y); y += 7
+    doc.text(`Participants: ${this.tripData.participants}`, 10, y); y += 7
+    doc.text(`Designation: ${this.tripData.designation}`, 10, y); y += 12
+
+    // Cost Breakdown
+    doc.setFontSize(14)
+    doc.text("Cost Breakdown", 10, y)
+    y += 8
+    doc.setFontSize(12)
+    doc.text(`Base Cost: ₹${this.tripData.costs.base}`, 10, y); y += 7
+    doc.text(`Activity Cost: ₹${this.tripData.costs.activities}`, 10, y); y += 7
+    doc.text(`Total Cost: ₹${this.tripData.costs.total}`, 10, y); y += 12
+
+    // Special Requests
+    if (this.tripData.customNotes && this.tripData.customNotes.trim() !== "") {
+      doc.setFontSize(14)
+      doc.text("Special Requests", 10, y)
+      y += 8
+      doc.setFontSize(12)
+      doc.text(this.tripData.customNotes, 10, y, { maxWidth: 180 })
+      y += 12
+    }
+
+    // Itinerary
+    doc.setFontSize(14)
+    doc.text("Itinerary", 10, y)
+    y += 8
+    doc.setFontSize(12)
+
+    const activityDetails = {
+      sightseeing: "Sightseeing Tour",
+      adventure: "Adventure Activities",
+      teambuilding: "Team Building",
+      cultural: "Cultural Experience",
+      meals: "Meals & Refreshments",
+      transport: "Transportation",
+    }
+
+    this.tripData.activities.forEach((activity) => {
+      doc.text(`- ${activityDetails[activity] || activity}`, 10, y)
+      y += 7
+    })
+
+    // Footer
+    doc.setFontSize(10)
+    doc.setTextColor(100)
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 10, 290)
+    doc.text("Company Name | Contact: info@company.com", 105, 290, { align: "center" })
+
+    doc.save(`trip-proposal-${this.tripData.date}.pdf`)
   }
 }
 
