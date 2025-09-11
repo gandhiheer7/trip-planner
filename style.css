@@ -407,17 +407,19 @@ body {
 /* Custom Notes Textarea */
 #customNotes {
   resize: vertical;
+  min-height: 80px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  padding: 10px;
+  padding: 12px;
   font-size: 1rem;
   font-family: inherit;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 #customNotes:focus {
-  border-color: #1d4ed8;
   outline: none;
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
 }
 
 /* Itinerary Timeline */
